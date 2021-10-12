@@ -1,23 +1,5 @@
 open System
-open System.Runtime.InteropServices //for OutAttribute
-open SDL2
 open type SDL2.SDL
-open ThreesAI
-//
-//let displayTile (tx, ty) tile =
-//    match tx with 
-//
-//let displayTile (tx, ty) tile =
-//    let display = 
-//    match tx with
-//    | 0 -> " . "
-//    | _ -> if (tx + 1) % 4 = 0 then ""
-//
-//let displayBoard (board: Board) =
-//    let sortedList = boarMap.toList
-//        
-//    sortedList
-//
 
 let screenWidth = 640
 let screenHeight = 480
@@ -36,7 +18,12 @@ let main argv =
     if SDL_Init(SDL_INIT_VIDEO) < 0 then
         printfn $"Error initializing SDL: {SDL_GetError()}"
         
-    let window = SDL_CreateWindow ("SDL Test", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, screenWidth, screenHeight, SDL_WindowFlags.SDL_WINDOW_SHOWN)
+    let window = SDL_CreateWindow ("SDL Test",
+                                   SDL_WINDOWPOS_UNDEFINED,
+                                   SDL_WINDOWPOS_UNDEFINED,
+                                   screenWidth,
+                                   screenHeight,
+                                   SDL_WindowFlags.SDL_WINDOW_SHOWN ||| SDL_WindowFlags.SDL_WINDOW_ALLOW_HIGHDPI)
     
     if window = IntPtr.Zero then
         printfn $"Error creating window: {SDL_GetError()}"
