@@ -40,7 +40,7 @@ let gameLoop window renderer =
 let main argv =
     match Rendering.init ("Title", screenWidth, screenHeight) with
     | Ok (window, renderer) -> gameLoop window renderer
-    | Error e -> printfn $"{e}"
+    | Error e -> printfn $"SDL Error: {e}"
     |> ignore 
     0
     
