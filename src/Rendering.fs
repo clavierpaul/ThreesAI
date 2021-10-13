@@ -46,7 +46,7 @@
     let private sdlBuilder = SDLBuilder()
     
     let init (windowProperties: WindowProperties): Result<Window * Renderer, string> = sdlBuilder {
-        let! _ = sdlInit ()
+        do! sdlInit ()
         let! window = createWindow windowProperties
         let! renderer = createRenderer window
         
