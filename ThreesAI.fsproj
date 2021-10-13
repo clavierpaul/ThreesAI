@@ -9,6 +9,7 @@
     <ItemGroup>
         <Compile Include="src/Board.fs" />
         <Compile Include="src/Controls.fs" />
+        <Compile Include="src\Rendering.fs" />
         <Compile Include="src/Program.fs" />
     </ItemGroup>
     
