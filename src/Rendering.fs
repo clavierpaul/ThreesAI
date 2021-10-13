@@ -6,7 +6,7 @@
     type Window = nativeint
     type Renderer = nativeint
     
-    type private SDLBuilder () =
+    type private ResultBuilder () =
         member this.Bind(v, f) =
             match v with
             | Ok v -> f v
@@ -21,7 +21,7 @@
             Ok ()
             
     let private createWindow ((title, width, height): WindowProperties): Result<Window, string> =
-        let window = SDL_CreateWindow ("SDL Test",
+        let window = SDL_CreateWindow (title,
                                        SDL_WINDOWPOS_UNDEFINED,
                                        SDL_WINDOWPOS_UNDEFINED,
                                        width,
@@ -43,7 +43,7 @@
         else
             Ok renderer
     
-    let private sdlBuilder = SDLBuilder()
+    let private sdlBuilder = ResultBuilder()
     
     let init (windowProperties: WindowProperties): Result<Window * Renderer, string> = sdlBuilder {
         do! sdlInit ()
