@@ -1,8 +1,9 @@
 open System
+open ThreesAI
 open type SDL2.SDL
 
-let screenWidth = 640
-let screenHeight = 480
+let screenWidth = 32 * 2 * 4
+let screenHeight = 48 * 2 * 4
 
 let pollEvents ()  =
     let rec pollLoop events =
@@ -13,27 +14,8 @@ let pollEvents ()  =
             events
     pollLoop []
 
-[<EntryPoint>]
-let main argv =
-    if SDL_Init(SDL_INIT_VIDEO) < 0 then
-        printfn $"Error initializing SDL: {SDL_GetError()}"
-        
-    let window = SDL_CreateWindow ("SDL Test",
-                                   SDL_WINDOWPOS_UNDEFINED,
-                                   SDL_WINDOWPOS_UNDEFINED,
-                                   screenWidth,
-                                   screenHeight,
-                                   SDL_WindowFlags.SDL_WINDOW_SHOWN ||| SDL_WindowFlags.SDL_WINDOW_ALLOW_HIGHDPI)
-    
-    if window = IntPtr.Zero then
-        printfn $"Error creating window: {SDL_GetError()}"
-    
-    let renderer = SDL_CreateRenderer (window, -1, SDL_RendererFlags.SDL_RENDERER_ACCELERATED ||| SDL_RendererFlags.SDL_RENDERER_PRESENTVSYNC)
-    
-    if renderer = IntPtr.Zero then
-        printfn $"Error creating renderer: {SDL_GetError()}"
-    
-    SDL_SetRenderDrawColor(renderer, 0x00uy, 0x00uy, 0xFFuy, 0xFFuy) |> ignore
+let gameLoop window renderer =
+    SDL_SetRenderDrawColor(renderer, 0xB6uy, 0xCDuy, 0xF0uy, 0xFFuy) |> ignore
     
     let rec eventLoop () =
         SDL_RenderClear renderer |> ignore
@@ -53,4 +35,12 @@ let main argv =
     SDL_DestroyRenderer renderer
     SDL_DestroyWindow window
     SDL_Quit ()
+
+[<EntryPoint>]
+let main argv =
+    match Rendering.init ("Title", screenWidth, screenHeight) with
+    | Ok (window, renderer) -> gameLoop window renderer
+    | Error e -> printfn $"{e}"
+    |> ignore 
     0
+    
