@@ -23,8 +23,8 @@ module Display =
 
     let renderTile textureAtlas renderer (x, y) tile =
         match tile with
-        | Empty -> 0
+        | Empty -> ()
         | Tile value -> Texture.render textureAtlas renderer (x * 32 * 4, y * 48 * 4) (Some <| clipRectangleFromTileNumber value)
         
     let renderBoard renderer textureAtlas (board: Board) =
-        Array2D.iteri (fun x y tile -> renderTile textureAtlas renderer (x, y) tile |> ignore) board
+        Array2D.iteri (fun x y -> renderTile textureAtlas renderer (x, y)) board

@@ -57,8 +57,10 @@ module Texture =
         match clipRectangle with
         | None ->
             let mutable destRect = SDL_Rect ( x = x, y = y, w = texture.Width * texture.Scale, h = texture.Height * texture.Scale)
-            SDL_RenderCopy (renderer, texture.Handle, IntPtr.Zero, &destRect)
+            
+            // What is error handling :S
+            SDL_RenderCopy (renderer, texture.Handle, IntPtr.Zero, &destRect) |> ignore
         | Some rect ->
             let mutable sdlRect = SDL_Rect ( x = rect.X, y = rect.Y, w = rect.W, h = rect.H )
             let mutable destRect = SDL_Rect ( x = x, y = y, w = rect.W * texture.Scale, h = rect.H * texture.Scale)
-            SDL_RenderCopy (renderer, texture.Handle, &sdlRect, &destRect)
+            SDL_RenderCopy (renderer, texture.Handle, &sdlRect, &destRect) |> ignore
