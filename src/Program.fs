@@ -19,11 +19,29 @@ let pollEvents ()  =
 
 let gameLoop (window: Rendering.Window) (renderer: Rendering.Renderer) textures =
     
+    let test = Board.empty
+    test.[0, 0] <- Tile 96
+    test.[0, 1] <- Tile 6
+    test.[0, 2] <- Tile 48
+    test.[0, 3] <- Tile 6
+    
+    test.[1, 0] <- Tile 12
+    test.[1, 1] <- Tile 96
+    test.[1, 2] <- Tile 3
+    test.[1, 3] <- Tile 2
+    
+    test.[2, 0] <- Tile 1
+    test.[2, 1] <- Tile 1
+    test.[2, 3] <- Tile 3
+    
+    test.[3, 0] <- Tile 12
+    test.[3, 1] <- Tile 3
+    test.[3, 2] <- Tile 2
+    test.[3, 3] <- Tile 2
+    
     let rec eventLoop () =
         SDL_RenderClear renderer |> ignore
-        Texture.render textures.Tiles renderer (0, 0) (Some { X = 64; Y = 0; W = 32; H = 48 }) |> ignore
-        Texture.render textures.Tiles renderer (32 * 4, 0) (Some { X = 32; Y = 0; W = 32; H = 48 }) |> ignore
-        Texture.render textures.Tiles renderer (32 * 4, 48 * 4) (Some { X = 0; Y = 0; W = 32; H = 48 }) |> ignore
+        Display.renderBoard renderer textures.Tiles test
         SDL_RenderPresent renderer
         
         let events = pollEvents ()
