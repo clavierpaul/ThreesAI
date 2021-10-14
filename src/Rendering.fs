@@ -6,7 +6,7 @@
     type WindowProperties = string * int * int
     type Window = nativeint
     type Renderer = nativeint
-    
+    type Color = byte * byte * byte * byte
     
     let private sdlInit () =
         if (SDL_Init SDL_INIT_VIDEO) <> 0 then
@@ -45,3 +45,8 @@
         return (window, renderer)
     }
     
+    let setDrawColor (renderer: Renderer) ((r, g, b, a): Color) =
+        if SDL_SetRenderDrawColor (renderer, r, g, b, a) < 0 then
+            Error <| SDL_GetError ()
+        else
+            Ok ()
