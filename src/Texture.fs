@@ -32,6 +32,8 @@ module Texture =
         
         // We have to dereference the surface to access its width and height
         // Convert nativeint to nativeptr and read
+        
+        // lol pointers in functional programming
         let surfacePtr = surfaceRef |> NativePtr.ofNativeInt
         let surface = NativePtr.read<SDL_Surface> surfacePtr
         let w, h = (surface.w, surface.h)
