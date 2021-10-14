@@ -5,8 +5,8 @@ open type SDL2.SDL
 type Textures =
     { Tiles: Texture }
 
-let screenWidth = 32 * 2 * 4
-let screenHeight = 48 * 2 * 4
+let screenWidth = 32 * 2 * 4 * 2
+let screenHeight = 48 * 2 * 4 * 2
 
 let pollEvents ()  =
     let rec pollLoop events =

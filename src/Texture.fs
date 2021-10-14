@@ -1,4 +1,5 @@
 ﻿namespace ThreesAI
+#nowarn "9"
 
 open System
 open FSharp.NativeInterop
