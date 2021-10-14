@@ -2,6 +2,9 @@ open System
 open ThreesAI
 open type SDL2.SDL
 
+type Textures =
+    { Tiles: Texture }
+
 let screenWidth = 32 * 2 * 4
 let screenHeight = 48 * 2 * 4
 
@@ -14,11 +17,8 @@ let pollEvents ()  =
             events
     pollLoop []
 
-let gameLoop window renderer =
+let gameLoop window renderer textures =
     SDL_SetRenderDrawColor(renderer, 0xB6uy, 0xCDuy, 0xF0uy, 0xFFuy) |> ignore
-    match Texture.create renderer "assets/tiles.png" with
-    | Ok _ -> ()
-    | Error e -> printfn $"SDL Error: {e}"
     
     let rec eventLoop () =
         SDL_RenderClear renderer |> ignore
@@ -38,11 +38,18 @@ let gameLoop window renderer =
     SDL_DestroyRenderer renderer
     SDL_DestroyWindow window
     SDL_Quit ()
+    
+let init () = ResultBuilder.resultBuilder {
+    let! window, renderer = Rendering.init ("ThreesAI", screenWidth, screenHeight)
+    let! tiles = Texture.create renderer "assets/tiles.png"
+    
+    return (window, renderer, { Tiles = tiles })
+}
 
 [<EntryPoint>]
 let main _ =
-    match Rendering.init ("ThreesAI", screenWidth, screenHeight) with
-    | Ok (window, renderer) -> gameLoop window renderer
+    match init () with
+    | Ok (window, renderer, textures) -> gameLoop window renderer textures
     | Error e -> printfn $"SDL Error: {e}"
     |> ignore 
     0
