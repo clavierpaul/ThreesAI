@@ -17,10 +17,13 @@ let pollEvents ()  =
             events
     pollLoop []
 
-let gameLoop window renderer textures =
+let gameLoop (window: Rendering.Window) (renderer: Rendering.Renderer) textures =
     
     let rec eventLoop () =
         SDL_RenderClear renderer |> ignore
+        Texture.render textures.Tiles renderer (0, 0) (Some { X = 64; Y = 0; W = 32; H = 48 }) |> ignore
+        Texture.render textures.Tiles renderer (32 * 4, 0) (Some { X = 32; Y = 0; W = 32; H = 48 }) |> ignore
+        Texture.render textures.Tiles renderer (32 * 4, 48 * 4) (Some { X = 0; Y = 0; W = 32; H = 48 }) |> ignore
         SDL_RenderPresent renderer
         
         let events = pollEvents ()
@@ -40,7 +43,7 @@ let gameLoop window renderer textures =
     
 let init () = ResultBuilder.resultBuilder {
     let! window, renderer = Rendering.init ("ThreesAI", screenWidth, screenHeight)
-    let! tiles = Texture.create renderer "assets/tiles.png"
+    let! tiles = Texture.create renderer "assets/tiles.png" 4
     
     do! Rendering.setDrawColor renderer (0xB6uy, 0xCDuy, 0xF0uy, 0xFFuy)
     

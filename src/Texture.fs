@@ -4,13 +4,21 @@
 open System
 open FSharp.NativeInterop
 open ResultBuilder
+open Rendering
 open type SDL2.SDL
 open type SDL2.SDL_image
 
 type Texture =
     { Handle: nativeint
       Width: int
-      Height: int }
+      Height: int
+      Scale: int }
+
+type ClipRectangle =
+    { X: int
+      Y: int
+      W: int
+      H: int }
 
 module Texture =
     let private loadImage path =
@@ -27,7 +35,7 @@ module Texture =
         else
             Ok texture
     
-    let create renderer path = resultBuilder {
+    let create renderer path scale = resultBuilder {
         let! surfaceRef = loadImage path
         let! texture = createTexture renderer surfaceRef
         
@@ -42,5 +50,15 @@ module Texture =
         // Delete surface now that it is loaded as a texture
         SDL_FreeSurface surfaceRef
         
-        return { Handle = texture; Width = w; Height = h; }
+        return { Handle = texture; Width = w; Height = h; Scale = scale }
     }
+
+    let render texture (renderer: Renderer) ((x, y): Coords) (clipRectangle: ClipRectangle option) =
+        match clipRectangle with
+        | None ->
+            let mutable destRect = SDL_Rect ( x = x, y = y, w = texture.Width * texture.Scale, h = texture.Height * texture.Scale)
+            SDL_RenderCopy (renderer, texture.Handle, IntPtr.Zero, &destRect)
+        | Some rect ->
+            let mutable sdlRect = SDL_Rect ( x = rect.X, y = rect.Y, w = rect.W, h = rect.H )
+            let mutable destRect = SDL_Rect ( x = x, y = y, w = rect.W * texture.Scale, h = rect.H * texture.Scale)
+            SDL_RenderCopy (renderer, texture.Handle, &sdlRect, &destRect)
