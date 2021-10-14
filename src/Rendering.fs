@@ -1,21 +1,15 @@
 ﻿module ThreesAI.Rendering
     open System
+    open ResultBuilder
     open type SDL2.SDL
     
     type WindowProperties = string * int * int
     type Window = nativeint
     type Renderer = nativeint
     
-    type private ResultBuilder () =
-        member this.Bind(v, f) =
-            match v with
-            | Ok v -> f v
-            | Error e -> Error e
-        
-        member this.Return value = Ok value
     
     let private sdlInit () =
-        if (SDL_Init SDL_INIT_VIDEO) < 0 then
+        if (SDL_Init SDL_INIT_VIDEO) <> 0 then
             Error <| SDL_GetError ()
         else
             Ok ()
@@ -43,12 +37,11 @@
         else
             Ok renderer
     
-    let private sdlBuilder = ResultBuilder()
-    
-    let init (windowProperties: WindowProperties): Result<Window * Renderer, string> = sdlBuilder {
+    let init (windowProperties: WindowProperties): Result<Window * Renderer, string> = resultBuilder {
         do! sdlInit ()
         let! window = createWindow windowProperties
         let! renderer = createRenderer window
         
         return (window, renderer)
     }
+    
