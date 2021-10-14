@@ -1,8 +1,11 @@
 ﻿namespace ThreesAI
 
-type Tile = int
+type Tile =
+    | Empty
+    | Tile of int
+    
 type Coords = int * int
-type Board = Map<Coords, Tile>
+type Board = Tile [,]
 
 module Board =
-    let empty: Board = Map.empty
+    let empty: Board = Array2D.zeroCreate 4 4

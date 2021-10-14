@@ -16,6 +16,7 @@
         <Compile Include="src\Controls.fs" />
         <Compile Include="src\Rendering.fs" />
         <Compile Include="src\Texture.fs" />
+        <Compile Include="src\Display.fs" />
         <Compile Include="src\Program.fs" />
     </ItemGroup>
     
