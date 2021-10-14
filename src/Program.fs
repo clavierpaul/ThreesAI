@@ -16,6 +16,9 @@ let pollEvents ()  =
 
 let gameLoop window renderer =
     SDL_SetRenderDrawColor(renderer, 0xB6uy, 0xCDuy, 0xF0uy, 0xFFuy) |> ignore
+    match Texture.create renderer "assets/tiles.png" with
+    | Ok _ -> ()
+    | Error e -> printfn $"SDL Error: {e}"
     
     let rec eventLoop () =
         SDL_RenderClear renderer |> ignore
@@ -37,8 +40,8 @@ let gameLoop window renderer =
     SDL_Quit ()
 
 [<EntryPoint>]
-let main argv =
-    match Rendering.init ("Title", screenWidth, screenHeight) with
+let main _ =
+    match Rendering.init ("ThreesAI", screenWidth, screenHeight) with
     | Ok (window, renderer) -> gameLoop window renderer
     | Error e -> printfn $"SDL Error: {e}"
     |> ignore 
