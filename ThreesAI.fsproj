@@ -5,20 +5,24 @@
         <TargetFramework>net5.0</TargetFramework>
         <WarnOn>3390;$(WarnOn)</WarnOn>
     </PropertyGroup>
+    
+    <ItemGroup>
+        <ProjectReference Include="SDL2-CS\SDL2-CS.csproj" />
+    </ItemGroup>
 
     <ItemGroup>
-        <Compile Include="src/Board.fs" />
-        <Compile Include="src/Controls.fs" />
+        <Compile Include="src\ResultBuilder.fs" />
+        <Compile Include="src\Board.fs" />
+        <Compile Include="src\Controls.fs" />
         <Compile Include="src\Rendering.fs" />
-        <Compile Include="src/Program.fs" />
+        <Compile Include="src\Texture.fs" />
+        <Compile Include="src\Program.fs" />
     </ItemGroup>
     
     <ItemGroup>
-        <Content Include="assets/*.png" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <PackageReference Include="ppy.SDL2-CS" Version="1.0.452-alpha" />
+        <Content Include="assets\*.png">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
     </ItemGroup>
 
 </Project>
