@@ -20,6 +20,7 @@
     </ItemGroup>
     
     <ItemGroup>
+        <Content Include=".gitignore" />
         <Content Include="assets\*.png">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>
