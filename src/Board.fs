@@ -41,14 +41,8 @@ module Board =
         | Tile 1 , Tile 2  -> true
         | Tile 2 , Tile 1  -> true
         | Tile at, Tile bt -> at = bt
-//        
-//    let private canMerge ((sx, sy): Coords) ((dx, dy): Coords) (board: Board) =
-//        let srcTile = board.[sx, sy]
-//        let destTile = board.[dx, dy]
-//        
-//        compareTiles srcTile destTile
-    
-    let mergeLeft tile destTile  =
+        
+    let private mergeLeft tile destTile  =
         // I don't really like this but oh well
         if canMerge tile destTile then
             match tile, destTile with
@@ -58,29 +52,28 @@ module Board =
         else
             destTile
     
-    let mergeColumnLeft column destColumn =
+    let private mergeColumnLeft column destColumn =
         List.map2 mergeLeft column destColumn
         
-    let getColumn col (board: Board) =
+    let private getColumn col (board: Board) =
         [for y in [0..3] do board.[col, y]]
     
     let private createNextBoard (oldBoard: Board) =
         Array2D.init 4 4 (fun x y -> if x = 0 then oldBoard.[x, y] else Empty)
-
+    
     let shift direction board =
         // Hacky, hopefully temp solution
         let rotated = board |> rotateForDirection direction
-        // let mutable nextBoard = createNextBoard rotated
-        let mutable previousColumn = rotated |> getColumn 0
-        let mutable newBoardList = []
-        for c in [1..3] do
-            let currentColumn = rotated |> getColumn c
-            let merged = mergeColumnLeft currentColumn previousColumn
-            newBoardList   <- newBoardList @ merged
-            previousColumn <- List.map2 (fun src dest -> if canMerge src dest then Empty else src) currentColumn previousColumn
+        let rec shiftColumn ci previousColumn newBoardList =
+            if ci = 4 then
+                newBoardList @ previousColumn
+            else
+                let currentColumn = rotated |> getColumn ci
+                let merged = mergeColumnLeft currentColumn previousColumn
+                let remainder = List.map2 (fun src dest -> if canMerge src dest then Empty else src) currentColumn previousColumn
+                shiftColumn (ci + 1) remainder <| newBoardList @ merged
         
-        
-        newBoardList <- newBoardList @ previousColumn
+        let newBoardList = shiftColumn 1 (rotated |> getColumn 0) []
         
         let newBoard = Array2D.init 4 4 (fun x y -> newBoardList.[x * 4 + y])
         newBoard |> rotateForDirectionInverse direction
