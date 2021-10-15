@@ -14,8 +14,22 @@ let pollEvents ()  =
             events
     pollLoop []
 
+let handleEvent (event: SDL_Event) board =
+    match event.``type`` with
+    | SDL_EventType.SDL_KEYDOWN -> match event.key.keysym.sym with
+                                   | SDL_Keycode.SDLK_LEFT  -> Board.shift Controls.Left board
+                                   | SDL_Keycode.SDLK_RIGHT -> Board.shift Controls.Right board
+                                   | SDL_Keycode.SDLK_UP    -> Board.shift Controls.Up board
+                                   | SDL_Keycode.SDLK_DOWN  -> Board.shift Controls.Down board
+                                   | _ -> board
+    | _ -> board
+
+let rec handleEvents (events: SDL_Event list) board =
+    match events with
+    | [] -> board
+    | event :: events -> handleEvents events <| handleEvent event board
+
 let gameLoop (window: Rendering.Window) (renderer: Rendering.Renderer) textures =
-    
     let mutable test = Board.empty
     test.[0, 0] <- Tile 1
     test.[1, 0] <- Tile 3
@@ -43,15 +57,7 @@ let gameLoop (window: Rendering.Window) (renderer: Rendering.Renderer) textures 
         if List.exists matchQuit events then
             ()
         else
-            for event in events do
-                match event.``type`` with
-                | SDL_EventType.SDL_KEYDOWN -> match event.key.keysym.sym with
-                                               | SDL_Keycode.SDLK_LEFT  -> test <- Board.shift Controls.Left test
-                                               | SDL_Keycode.SDLK_RIGHT -> test <- Board.shift Controls.Right test
-                                               | SDL_Keycode.SDLK_UP    -> test <- Board.shift Controls.Up test
-                                               | SDL_Keycode.SDLK_DOWN  -> test <- Board.shift Controls.Down test
-                                               | _ -> ()
-                | _ -> ()
+            test <- handleEvents events test
             eventLoop ()
         
     eventLoop ()
