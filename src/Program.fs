@@ -46,10 +46,10 @@ let gameLoop (window: Rendering.Window) (renderer: Rendering.Renderer) textures 
             for event in events do
                 match event.``type`` with
                 | SDL_EventType.SDL_KEYDOWN -> match event.key.keysym.sym with
-                                               | SDL_Keycode.SDLK_LEFT -> test <- Board.shift Controls.Left test
+                                               | SDL_Keycode.SDLK_LEFT  -> test <- Board.shift Controls.Left test
                                                | SDL_Keycode.SDLK_RIGHT -> test <- Board.shift Controls.Right test
-                                               | SDL_Keycode.SDLK_UP -> test <- Board.shift Controls.Up test
-                                               | SDL_Keycode.SDLK_DOWN -> test <- Board.shift Controls.Down test
+                                               | SDL_Keycode.SDLK_UP    -> test <- Board.shift Controls.Up test
+                                               | SDL_Keycode.SDLK_DOWN  -> test <- Board.shift Controls.Down test
                                                | _ -> ()
                 | _ -> ()
             eventLoop ()
