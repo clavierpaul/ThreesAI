@@ -26,8 +26,6 @@ let gameLoop (window: Rendering.Window) (renderer: Rendering.Renderer) textures 
     test.[0, 3] <- Tile 6
     
     test.[1, 0] <- Tile 12
-    test.[1, 1] <- Tile 96
-    test.[1, 2] <- Tile 3
     test.[1, 3] <- Tile 2
     
     test.[2, 0] <- Tile 1
