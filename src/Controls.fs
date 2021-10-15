@@ -1,7 +1,6 @@
-﻿module ThreesAI.Controls
+﻿namespace ThreesAI
 
 open ThreesAI
-open Board
 
 module Controls =
     type ShiftDirection =
@@ -9,11 +8,11 @@ module Controls =
         | Down
         | Left
         | Right
-    
-    let private toShiftVector direction =
-        match direction with
-        | Up    -> ( 0, -1)
-        | Down  -> ( 0,  1)
-        | Left  -> (-1,  0)
-        | Right -> ( 1,  0)
-        
+//    
+//    let private toShiftVector direction =
+//        match direction with
+//        | Up    -> ( 0, -1)
+//        | Down  -> ( 0,  1)
+//        | Left  -> (-1,  0)
+//        | Right -> ( 1,  0)
+//

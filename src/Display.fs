@@ -6,7 +6,7 @@ module Display =
           Tiles: Texture }
 
     [<Literal>]
-    let scale = 2
+    let scale = 4
     
     [<Literal>]
     let tileW = 32

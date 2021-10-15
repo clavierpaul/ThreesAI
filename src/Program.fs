@@ -16,22 +16,18 @@ let pollEvents ()  =
 
 let gameLoop (window: Rendering.Window) (renderer: Rendering.Renderer) textures =
     
-    let test = Board.empty
-    test.[0, 0] <- Tile 96
-    test.[0, 1] <- Tile 6
-    test.[0, 2] <- Tile 48
-    test.[0, 3] <- Tile 6
+    let mutable test = Board.empty
+    test.[0, 0] <- Tile 1
+    test.[1, 0] <- Tile 3
+    test.[2, 0] <- Tile 3
     
-    test.[1, 0] <- Tile 12
-    test.[1, 3] <- Tile 2
+    test.[0, 1] <- Tile 2
     
-    test.[2, 0] <- Tile 1
-    test.[2, 1] <- Tile 1
+    test.[1, 2] <- Tile 1
+    test.[2, 2] <- Tile 3
+    test.[3, 2] <- Tile 1
+    
     test.[2, 3] <- Tile 3
-    
-    test.[3, 0] <- Tile 12
-    test.[3, 1] <- Tile 3
-    test.[3, 2] <- Tile 2
     test.[3, 3] <- Tile 2
     
     let rec eventLoop () =
@@ -43,10 +39,19 @@ let gameLoop (window: Rendering.Window) (renderer: Rendering.Renderer) textures 
         
         let matchQuit (event: SDL_Event) =
             event.``type`` = SDL_EventType.SDL_QUIT
-        
+       
         if List.exists matchQuit events then
             ()
         else
+            for event in events do
+                match event.``type`` with
+                | SDL_EventType.SDL_KEYDOWN -> match event.key.keysym.sym with
+                                               | SDL_Keycode.SDLK_LEFT -> test <- Board.shift Controls.Left test
+                                               | SDL_Keycode.SDLK_RIGHT -> test <- Board.shift Controls.Right test
+                                               | SDL_Keycode.SDLK_UP -> test <- Board.shift Controls.Up test
+                                               | SDL_Keycode.SDLK_DOWN -> test <- Board.shift Controls.Down test
+                                               | _ -> ()
+                | _ -> ()
             eventLoop ()
         
     eventLoop ()
