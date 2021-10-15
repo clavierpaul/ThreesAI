@@ -2,11 +2,8 @@ open System
 open ThreesAI
 open type SDL2.SDL
 
-type Textures =
-    { Tiles: Texture }
-
-let screenWidth = 32 * 2 * 4 * 2
-let screenHeight = 48 * 2 * 4 * 2
+let screenWidth = 140
+let screenHeight = 204
 
 let pollEvents ()  =
     let rec pollLoop events =
@@ -39,7 +36,7 @@ let gameLoop (window: Rendering.Window) (renderer: Rendering.Renderer) textures 
     
     let rec eventLoop () =
         SDL_RenderClear renderer |> ignore
-        Display.renderBoard renderer textures.Tiles test
+        Display.render renderer textures test
         SDL_RenderPresent renderer
         
         let events = pollEvents ()
@@ -58,12 +55,11 @@ let gameLoop (window: Rendering.Window) (renderer: Rendering.Renderer) textures 
     SDL_Quit ()
     
 let init () = ResultBuilder.resultBuilder {
-    let! window, renderer = Rendering.init ("ThreesAI", screenWidth, screenHeight)
-    let! tiles = Texture.create renderer "assets/tiles.png" 4
+    let! window, renderer = Rendering.init ("ThreesAI", screenWidth * Display.scale, screenHeight * Display.scale)
+    let! tiles = Texture.create renderer "assets/tiles.png" Display.scale
+    let! background = Texture.create renderer "assets/background.png" Display.scale
     
-    do! Rendering.setDrawColor renderer (0xB6uy, 0xCDuy, 0xF0uy, 0xFFuy)
-    
-    return (window, renderer, { Tiles = tiles })
+    return (window, renderer, ({ Background = background; Tiles = tiles }: Display.Textures) )
 }
 
 [<EntryPoint>]

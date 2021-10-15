@@ -1,6 +1,19 @@
 namespace ThreesAI
 
 module Display =
+    type Textures =
+        { Background: Texture
+          Tiles: Texture }
+
+    [<Literal>]
+    let scale = 2
+    
+    [<Literal>]
+    let tileW = 32
+    
+    [<Literal>]
+    let tileH = 48
+    
     let tileAtlas = Map.empty
                         .Add(1,    (0, 0))
                         .Add(2,    (1, 0))
@@ -22,9 +35,12 @@ module Display =
         { X = x * 32; Y = y * 48; W = 32; H = 48 }
 
     let renderTile textureAtlas renderer (x, y) tile =
+        let gridX = x * (tileW + 2) + 3
+        let gridY = y * (tileH + 2) + 3
         match tile with
         | Empty -> ()
-        | Tile value -> Texture.render textureAtlas renderer (x * 32 * 4, y * 48 * 4) (Some <| clipRectangleFromTileNumber value)
+        | Tile value -> Texture.render textureAtlas renderer (scale * gridX, scale * gridY) (Some <| clipRectangleFromTileNumber value)
         
-    let renderBoard renderer textureAtlas (board: Board) =
-        Array2D.iteri (fun x y -> renderTile textureAtlas renderer (x, y)) board
+    let render renderer textures (board: Board) =
+        Texture.render textures.Background renderer (0, 0) None
+        Array2D.iteri (fun x y -> renderTile textures.Tiles renderer (x, y)) board
