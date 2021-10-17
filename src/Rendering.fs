@@ -30,7 +30,8 @@
     let private createRenderer window: Result<Renderer, string> =
         let renderer = SDL_CreateRenderer (window,
                                            -1,
-                                           SDL_RendererFlags.SDL_RENDERER_ACCELERATED ||| SDL_RendererFlags.SDL_RENDERER_PRESENTVSYNC)
+                                           SDL_RendererFlags.SDL_RENDERER_ACCELERATED
+                                           ||| SDL_RendererFlags.SDL_RENDERER_PRESENTVSYNC)
             
         if renderer = IntPtr.Zero then
            Error <| SDL_GetError ()
