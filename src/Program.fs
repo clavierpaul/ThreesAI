@@ -72,7 +72,11 @@ let init () = ResultBuilder.resultBuilder {
     let! tiles = Texture.create renderer "assets/tiles.png" Display.scale
     let! background = Texture.create renderer "assets/background.png" Display.scale
     
-    return { Window = window; Renderer = renderer; Textures = { Tiles = tiles; Background = background } }
+    return { Window = window
+             Renderer = renderer
+             Textures =
+                 { Tiles = tiles
+                   Background = background } }
 }
 
 [<EntryPoint>]
