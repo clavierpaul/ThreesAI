@@ -1,12 +1,29 @@
-open System
 open ThreesAI
+open ThreesAI.Game
 open type SDL2.SDL
 
 let screenWidth = 140
 let screenHeight = 204
 
+type SDLData =
+    { Window: Rendering.Window
+      Renderer: Rendering.Renderer
+      Textures: Display.Textures }
+
+// Dumb type name is dumb
+type EventReturn =
+    | Quit
+    | State of State
+
+let render sdlData board =
+    SDL_RenderClear sdlData.Renderer |> ignore
+    Display.render sdlData.Renderer sdlData.Textures board
+    SDL_RenderPresent sdlData.Renderer
+
 let pollEvents ()  =
     let rec pollLoop events =
+        // Required to be mutable :(
+        // Could be done using a non-recursive method?
         let mutable event = Unchecked.defaultof<SDL_Event>
         if (SDL_PollEvent &event) <> 0 then
             pollLoop <| event :: events
@@ -14,69 +31,53 @@ let pollEvents ()  =
             events
     pollLoop []
 
-let handleEvent (event: SDL_Event) board =
+// Avoids having to wrap every return in State
+let updateState state (event: SDL_Event) =
     match event.``type`` with
-    | SDL_EventType.SDL_KEYDOWN -> match event.key.keysym.sym with
-                                   | SDL_Keycode.SDLK_LEFT  -> Board.shift Controls.Left board
-                                   | SDL_Keycode.SDLK_RIGHT -> Board.shift Controls.Right board
-                                   | SDL_Keycode.SDLK_UP    -> Board.shift Controls.Up board
-                                   | SDL_Keycode.SDLK_DOWN  -> Board.shift Controls.Down board
-                                   | _ -> board
-    | _ -> board
-
-let rec handleEvents (events: SDL_Event list) board =
-    match events with
-    | [] -> board
-    | event :: events -> handleEvents events <| handleEvent event board
-
-let gameLoop (window: Rendering.Window) (renderer: Rendering.Renderer) textures =
-    let mutable test = Board.empty
-    test.[0, 0] <- Tile 1
-    test.[1, 0] <- Tile 3
-    test.[2, 0] <- Tile 3
+    | SDL_EventType.SDL_KEYDOWN ->
+        match event.key.keysym.sym with
+        | SDL_Keycode.SDLK_LEFT  -> state |> shift Controls.Left
+        | SDL_Keycode.SDLK_RIGHT -> state |> shift Controls.Right
+        | SDL_Keycode.SDLK_UP    -> state |> shift Controls.Up
+        | SDL_Keycode.SDLK_DOWN  -> state |> shift Controls.Down
+        | _ -> state
+    | _ -> state
     
-    test.[0, 1] <- Tile 2
+let update state (event: SDL_Event) =
+    match state with
+    | Quit -> state // If we're quitting, there's no more state to handle
+    | State state ->
+        match event.``type`` with
+        | SDL_EventType.SDL_QUIT -> Quit
+        | _                      -> State <| updateState state event
     
-    test.[1, 2] <- Tile 1
-    test.[2, 2] <- Tile 3
-    test.[3, 2] <- Tile 1
-    
-    test.[2, 3] <- Tile 3
-    test.[3, 3] <- Tile 2
-    
-    let rec eventLoop () =
-        SDL_RenderClear renderer |> ignore
-        Display.render renderer textures test
-        SDL_RenderPresent renderer
-        
-        let events = pollEvents ()
-        
-        let matchQuit (event: SDL_Event) =
-            event.``type`` = SDL_EventType.SDL_QUIT
-       
-        if List.exists matchQuit events then
-            ()
-        else
-            test <- handleEvents events test
-            eventLoop ()
-        
-    eventLoop ()
-    SDL_DestroyRenderer renderer
-    SDL_DestroyWindow window
-    SDL_Quit ()
+let rec gameLoop sdlData state =
+    // Fold events together into a final state (or quit)
+    match List.fold update (State state) <| pollEvents () with
+    | Quit           -> ()
+    | State newState ->
+        render sdlData newState.Board
+        gameLoop sdlData newState
     
 let init () = ResultBuilder.resultBuilder {
+    // If there are any errors, init will end early and return Error
     let! window, renderer = Rendering.init ("ThreesAI", screenWidth * Display.scale, screenHeight * Display.scale)
     let! tiles = Texture.create renderer "assets/tiles.png" Display.scale
     let! background = Texture.create renderer "assets/background.png" Display.scale
     
-    return (window, renderer, ({ Background = background; Tiles = tiles }: Display.Textures) )
+    return { Window = window; Renderer = renderer; Textures = { Tiles = tiles; Background = background } }
 }
 
 [<EntryPoint>]
 let main _ =
     match init () with
-    | Ok (window, renderer, textures) -> gameLoop window renderer textures
+    | Ok sdlData ->
+        gameLoop sdlData <| Game.init ()
+        SDL_DestroyTexture  sdlData.Textures.Tiles.Handle
+        SDL_DestroyTexture  sdlData.Textures.Background.Handle
+        SDL_DestroyRenderer sdlData.Renderer
+        SDL_DestroyWindow   sdlData.Window
+        SDL_Quit ()
     | Error e -> printfn $"SDL Error: {e}"
     |> ignore 
     0
