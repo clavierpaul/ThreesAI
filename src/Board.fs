@@ -80,6 +80,12 @@ module Board =
         let newBoard = Array2D.init 4 4 (fun x y -> newBoardList.[x * 4 + y])
         newBoard |> rotateForDirectionInverse direction
     
+    let tryGet (x, y) (board: Board) =
+        if x < 0 || x >= 4 || y < 0 || y >= 4 then
+            None
+        else
+            Some board.[x, y]
+    
     let getTileValue tile =
         match tile with
         | Empty  -> 0

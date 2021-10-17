@@ -76,9 +76,32 @@ let didShiftOccur before after =
     
     Seq.contains false <| Seq.map2 (fun a b -> a = b) beforeFlat afterFlat
 
+let canTileMerge (board: Board) x y tile =
+    let unwrap result =
+        match result with
+        | None   -> failwith "Attempted to unwrap a None"
+        | Some n -> n
+        
+    let adjacent =
+        [ Board.tryGet (x - 1, y) board
+          Board.tryGet (x + 1, y) board
+          Board.tryGet (x, y - 1) board
+          Board.tryGet (x, y + 1) board ] |> List.filter (fun result -> result <> None) |> List.map unwrap
+
+    let mergeResults = adjacent |> List.map (Board.canMerge tile)
+    List.contains true mergeResults
+
+let detectGameOver state =
+    let canTilesMerge = state.Board |> Array2D.mapi (canTileMerge state.Board) |> Seq.cast<bool> |> Seq.contains true
+    if canTilesMerge then
+        state
+    else
+        { state with GameOver = true }
+
 let shift direction state =
     let shifted = { state with Board = state.Board |> Board.shift direction }
     if didShiftOccur state.Board shifted.Board then
-        placeTile direction shifted
+        let placement = placeTile direction shifted
+        detectGameOver placement
     else
         state

@@ -59,8 +59,12 @@ let rec gameLoop sdlData state =
     match List.fold update (State state) <| pollEvents () with
     | Quit           -> ()
     | State newState ->
-        render sdlData newState.Board
-        gameLoop sdlData newState
+        if newState.GameOver then
+            printfn "Game over!"
+            ()
+        else 
+            render sdlData newState.Board
+            gameLoop sdlData newState
     
 let init () = ResultBuilder.resultBuilder {
     // If there are any errors, init will end early and return Error
