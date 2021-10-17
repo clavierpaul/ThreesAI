@@ -33,7 +33,7 @@ module Board =
         | Left  -> rotateForDirection Left
         | Right -> rotateForDirection Right
         
-    let private canMerge src dest =
+    let canMerge src dest =
         match src, dest with
         | Empty  , Empty   -> false
         | Empty  , Tile _  -> false
@@ -79,3 +79,11 @@ module Board =
         
         let newBoard = Array2D.init 4 4 (fun x y -> newBoardList.[x * 4 + y])
         newBoard |> rotateForDirectionInverse direction
+    
+    let getTileValue tile =
+        match tile with
+        | Empty  -> 0
+        | Tile n -> n
+    
+    let max board =
+        board |> Seq.cast<Tile> |> Seq.maxBy getTileValue
