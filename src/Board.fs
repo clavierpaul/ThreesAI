@@ -10,7 +10,7 @@ type Coords = int * int
 type Board = Tile [,]
 
 module Board =
-    let empty: Board = Array2D.create 4 4 Empty
+    let empty (): Board = Array2D.create 4 4 Empty
     
     let private transpose (board: Board) =
         Array2D.init 4 4 (fun r c -> board.[c, r])

@@ -1,8 +1,10 @@
 open ThreesAI
-open ThreesAI.Game
 open type SDL2.SDL
 
+[<Literal>]
 let screenWidth = 140
+
+[<Literal>]
 let screenHeight = 204
 
 type SDLData =
@@ -13,7 +15,7 @@ type SDLData =
 // Dumb type name is dumb
 type EventReturn =
     | Quit
-    | State of State
+    | State of Game.State
 
 let render sdlData board =
     SDL_RenderClear sdlData.Renderer |> ignore
@@ -36,10 +38,11 @@ let updateState state (event: SDL_Event) =
     match event.``type`` with
     | SDL_EventType.SDL_KEYDOWN ->
         match event.key.keysym.sym with
-        | SDL_Keycode.SDLK_LEFT  -> state |> shift Controls.Left
-        | SDL_Keycode.SDLK_RIGHT -> state |> shift Controls.Right
-        | SDL_Keycode.SDLK_UP    -> state |> shift Controls.Up
-        | SDL_Keycode.SDLK_DOWN  -> state |> shift Controls.Down
+        | SDL_Keycode.SDLK_LEFT  -> state |> Game.shift Controls.Left
+        | SDL_Keycode.SDLK_RIGHT -> state |> Game.shift Controls.Right
+        | SDL_Keycode.SDLK_UP    -> state |> Game.shift Controls.Up
+        | SDL_Keycode.SDLK_DOWN  -> state |> Game.shift Controls.Down
+        | SDL_Keycode.SDLK_r     -> Game.create ()
         | _ -> state
     | _ -> state
     
@@ -72,7 +75,7 @@ let init () = ResultBuilder.resultBuilder {
 let main _ =
     match init () with
     | Ok sdlData ->
-        gameLoop sdlData <| Game.init ()
+        gameLoop sdlData <| Game.create ()
         SDL_DestroyTexture  sdlData.Textures.Tiles.Handle
         SDL_DestroyTexture  sdlData.Textures.Background.Handle
         SDL_DestroyRenderer sdlData.Renderer

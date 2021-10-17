@@ -1,28 +1,36 @@
 ﻿module ThreesAI.Game
 
+open System
+
 // This would be cleaner with monads
 // but this will do for now
 type State = {
     Board: Board
+    Deck: Deck
 }
 
-// Testing code
-let createDummyBoard () =
-    let mutable test = Board.empty
-    test.[0, 0] <- Tile 1
-    test.[1, 0] <- Tile 3
-    test.[2, 0] <- Tile 3
-    
-    test.[0, 1] <- Tile 2
-    
-    test.[1, 2] <- Tile 1
-    test.[2, 2] <- Tile 3
-    test.[3, 2] <- Tile 1
-    
-    test.[2, 3] <- Tile 3
-    test.[3, 3] <- Tile 2
-    test
+let random = Random ()
 
-let init () = { Board = createDummyBoard () }
+let create () =
+    let deck = Deck.create ()
+    let board = Board.empty ()
+    
+    // I could do any number of unoptimized non-mutable methods
+    // but this works a lot better
+    let rec placementLoop tilesPlaced (deck: Deck) =
+        if tilesPlaced = 9 then
+            ()
+        else
+            
+        let rx, ry = (random.Next (0, 4), random.Next (0, 4))
+        if board.[rx, ry] = Empty then
+            let next = List.head deck
+            board.[rx, ry] <- next
+            placementLoop (tilesPlaced + 1) (List.tail deck)
+        else
+            placementLoop tilesPlaced deck
+    
+    placementLoop 0 deck
+    { Deck = deck; Board = board }
 
 let shift direction state = { state with Board = state.Board |> Board.shift direction }
