@@ -38,6 +38,8 @@ module Board =
         | Empty  , Empty   -> false
         | Empty  , Tile _  -> false
         | Tile _ , Empty   -> true
+        | Tile 1 , Tile 1  -> false
+        | Tile 2 , Tile 2  -> false
         | Tile 1 , Tile 2  -> true
         | Tile 2 , Tile 1  -> true
         | Tile at, Tile bt -> at = bt
