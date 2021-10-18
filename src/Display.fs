@@ -55,17 +55,17 @@ module Display =
     let renderNextTile textures state renderer =
         let nextTileAtlas = textures.NextTiles
         let scale = nextTileAtlas.Scale
-        let x = (screenWidth * renderScale * 2 - (nextTileAtlas.Width / 4) - 16)
-        let y = 12
+        let x = (screenWidth * renderScale * 2 - scale * (nextTileAtlas.Width / 4 + 16))
+        let y = 12 * renderScale
         
         let w = (nextTileAtlas.Width / 4)
         let h = nextTileAtlas.Height
         
         match state.NextTile with
-        | Tile 1 -> Texture.render nextTileAtlas renderer (scale * x, scale * y) (Some <| { X = 0; Y = 0; W = w; H = h })
-        | Tile 2 -> Texture.render nextTileAtlas renderer (scale * x, scale * y) (Some <| { X = w; Y = 0; W = w; H = h })
-        | Tile 3 -> Texture.render nextTileAtlas renderer (scale * x, scale * y) (Some <| { X = w * 2; Y = 0; W = w; H = h })
-        | Tile _ -> Texture.render nextTileAtlas renderer (scale * x, scale * y) (Some <| { X = w * 3; Y = 0; W = w; H = h })
+        | Tile 1 -> Texture.render nextTileAtlas renderer (x, y) (Some <| { X = 0; Y = 0; W = w; H = h })
+        | Tile 2 -> Texture.render nextTileAtlas renderer (x, y) (Some <| { X = w; Y = 0; W = w; H = h })
+        | Tile 3 -> Texture.render nextTileAtlas renderer (x, y) (Some <| { X = w * 2; Y = 0; W = w; H = h })
+        | Tile _ -> Texture.render nextTileAtlas renderer (x, y) (Some <| { X = w * 3; Y = 0; W = w; H = h })
         | Empty -> failwith "Next tile is empty"
         
     let renderNumber textures value renderer =
@@ -80,7 +80,7 @@ module Display =
                      
         
         let renderDigit i digit =
-            let x = (renderScale * 12) + i * w
+            let x = (renderScale * 12) + i * w * numberAtlas.Scale
             let y = (renderScale * 27)
             
             Texture.render numberAtlas renderer (x, y) (Some <| { X = w * digit; Y = 0; W = w; H = h })
