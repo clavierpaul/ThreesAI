@@ -11,6 +11,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <Compile Include="src\Prelude.fs" />
         <Compile Include="src\ResultBuilder.fs" />
         <Compile Include="src\Controls.fs" />
         <Compile Include="src\Board.fs" />

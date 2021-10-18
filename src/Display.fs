@@ -1,5 +1,6 @@
 namespace ThreesAI
 
+open type SDL2.SDL
 open ThreesAI.Game
 
 module Display =
@@ -9,21 +10,6 @@ module Display =
           NextTiles: Texture
           Numbers: Texture
           ScoreLabel: Texture }
-
-    [<Literal>]
-    let renderScale = 1
-    
-    [<Literal>]
-    let tileW = 32
-    
-    [<Literal>]
-    let tileH = 48
-    
-    [<Literal>]
-    let screenWidth = 156
-
-    [<Literal>]
-    let screenHeight = 253
     
     let tileAtlas = Map.empty
                         .Add(1,    (0, 0))
@@ -40,64 +26,86 @@ module Display =
                         .Add(1536, (2, 3))
                         .Add(3072, (0, 4))
                         .Add(6144, (1, 4))
-                        
-    let private clipRectangleFromTileNumber value =
-        let x, y = tileAtlas.[value]
-        { X = x * 32; Y = y * 48; W = 32; H = 48 }
+   
+    let renderNextTile texture state renderer =
+        let w = texture.Width / 4
+        let h = texture.Height
+        
+        let tileClipPosition =
+            match state.NextTile with
+            | Tile 1 -> 0
+            | Tile 2 -> w
+            | Tile 3 -> w * 2
+            | Tile _ -> w * 3
+            | Empty  -> failwith "Next tile is empty"
+        
+        Texture.renderer texture renderer
+            |> Texture.renderAt (258, 12)
+            |> Texture.clip (SDL_Rect ( x = tileClipPosition, y = 0, w = w, h = h ))
+            |> Texture.render
+        
+        renderer
     
-    let renderTile textureAtlas renderer (boardX, boardY) (x, y) scale tile =
-        let gridX = boardX + x * (tileW + 2) + 3
-        let gridY = boardY + 2 + y * (tileH + 2) + 3
-        match tile with
-        | Empty -> ()
-        | Tile value -> Texture.render textureAtlas renderer (scale * gridX, scale * gridY) (Some <| clipRectangleFromTileNumber value)
-        
-    let renderNextTile textures state renderer =
-        let nextTileAtlas = textures.NextTiles
-        let scale = nextTileAtlas.Scale
-        let x = (screenWidth * renderScale * 2 - scale * (nextTileAtlas.Width / 4 + 16))
-        let y = 12 * renderScale
-        
-        let w = (nextTileAtlas.Width / 4)
-        let h = nextTileAtlas.Height
-        
-        match state.NextTile with
-        | Tile 1 -> Texture.render nextTileAtlas renderer (x, y) (Some <| { X = 0; Y = 0; W = w; H = h })
-        | Tile 2 -> Texture.render nextTileAtlas renderer (x, y) (Some <| { X = w; Y = 0; W = w; H = h })
-        | Tile 3 -> Texture.render nextTileAtlas renderer (x, y) (Some <| { X = w * 2; Y = 0; W = w; H = h })
-        | Tile _ -> Texture.render nextTileAtlas renderer (x, y) (Some <| { X = w * 3; Y = 0; W = w; H = h })
-        | Empty -> failwith "Next tile is empty"
-        
-    let renderNumber textures value renderer =
-        let numberAtlas = textures.Numbers
-        let w = (numberAtlas.Width / 10)
-        let h = numberAtlas.Height
-        
-        let digits = value
-                     |> string
-                     |> Seq.toList
-                     |> Seq.map (string >> int)
-                     
-        
-        let renderDigit i digit =
-            let x = (renderScale * 12) + i * w * numberAtlas.Scale
-            let y = (renderScale * 27)
+    let renderTiles texture state renderer =
+        let clipRectangleFromTileNumber value =
+            let x, y = tileAtlas.[value]
+            SDL_Rect ( x = x * tileW, y = y * tileH, w = tileW, h = tileH )
             
-            Texture.render numberAtlas renderer (x, y) (Some <| { X = w * digit; Y = 0; W = w; H = h })
+        let renderTile x y tile =
+            let tileX = x * (tileW + 2)
+            let tileY = y * (tileH + 2)
+            match tile with
+            | Empty -> ()
+            | Tile value ->
+                Texture.renderer texture renderer
+                    |> Texture.renderAt (11 + tileX, 43 + tileY)
+                    |> Texture.clip (clipRectangleFromTileNumber value)
+                    |> Texture.render
+        
+        state.Board |> Array2D.iteri renderTile
+        
+        renderer
+    
+    let renderBoard texture renderer =
+        Texture.renderer texture renderer
+            |> Texture.renderAt (8, 38)
+            |> Texture.render
+            
+        renderer
+        
+    let renderScore texture state renderer =
+        let w = texture.Width / 10
+        let h = texture.Height
+        
+        let digits = state.Score
+                         |> string
+                         |> Seq.toList
+                         |> Seq.map (string >> int)
+            
+        let renderDigit i digit =
+            let x = 12 + i * w
+            
+            Texture.renderer texture renderer
+                |> Texture.renderAt (x, 27)
+                |> Texture.clip (SDL_Rect ( x = w * digit, y = 0, w = w, h = h ))
+                |> Texture.render
         
         digits |> Seq.iteri renderDigit
+        renderer
         
-    let renderScore textures state renderer =
-        let scoreLabel = textures.ScoreLabel
+    let renderScoreLabel texture renderer =
+        Texture.renderer texture renderer
+            |> Texture.renderAt (16, 15)
+            |> Texture.render
         
-        Texture.render scoreLabel renderer (renderScale * 16, renderScale * 15) None
-        renderNumber textures state.Score renderer
-        
+        renderer
+    
     let render renderer textures state =
-        let board = state.Board
-        
-        let boardY = screenHeight - textures.Background.Height - 8
-        Texture.render textures.Background renderer (textures.Background.Scale * 8, textures.Background.Scale * boardY) None
-        Array2D.iteri (fun x y -> renderTile textures.Tiles renderer (8, boardY) (x, y) textures.Tiles.Scale) board
-        renderer |> renderNextTile textures state
-        renderer |> renderScore textures state
+        renderer
+            |> renderBoard textures.Background
+            |> renderTiles textures.Tiles state
+            |> renderNextTile textures.NextTiles state
+            |> renderScoreLabel textures.ScoreLabel
+            |> renderScore textures.Numbers state
+            |> ignore
+        ()

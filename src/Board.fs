@@ -64,7 +64,6 @@ module Board =
         Array2D.init 4 4 (fun x y -> if x = 0 then oldBoard.[x, y] else Empty)
     
     let shift direction board =
-        // Hacky, hopefully temp solution
         let rotated = board |> rotateForDirection direction
         let rec shiftColumn ci previousColumn newBoardList =
             if ci = 4 then
