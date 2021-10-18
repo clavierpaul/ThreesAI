@@ -70,7 +70,7 @@ let init () = ResultBuilder.resultBuilder {
     let! numbers = Texture.create renderer "assets/numbers.png" Display.renderScale
     let! scoreLabel = Texture.create renderer "assets/score.png" Display.renderScale
     
-    do! Rendering.setDrawColor renderer (0xEEuy, 0xEEuy, 0xEEuy, 0xFFuy)
+    do! Rendering.setDrawColor renderer (0xFAuy, 0xFAuy, 0xFAuy, 0xFFuy)
     
     return { Window = window
              Renderer = renderer
