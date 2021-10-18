@@ -47,13 +47,16 @@ module Display =
         renderer
     
     let renderTiles texture state renderer =
+        let w = texture.Width / 3
+        let h = texture.Height / 5
+        
         let clipRectangleFromTileNumber value =
             let x, y = tileAtlas.[value]
-            SDL_Rect ( x = x * tileW, y = y * tileH, w = tileW, h = tileH )
+            SDL_Rect ( x = x * w, y = y * h, w = w, h = h )
             
         let renderTile x y tile =
-            let tileX = x * (tileW + 2)
-            let tileY = y * (tileH + 2)
+            let tileX = x * (w + 2)
+            let tileY = y * (h + 2)
             match tile with
             | Empty -> ()
             | Tile value ->
