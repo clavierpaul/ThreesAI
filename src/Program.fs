@@ -1,12 +1,7 @@
 open ThreesAI
 open type SDL2.SDL
 
-[<Literal>]
-let screenWidth = 140
-
-[<Literal>]
-let screenHeight = 204
-
+    
 type SDLData =
     { Window: Rendering.Window
       Renderer: Rendering.Renderer
@@ -63,20 +58,28 @@ let rec gameLoop sdlData state =
             printfn "Game over!"
             ()
         else 
-            render sdlData newState.Board
+            render sdlData newState
             gameLoop sdlData newState
     
 let init () = ResultBuilder.resultBuilder {
     // If there are any errors, init will end early and return Error
-    let! window, renderer = Rendering.init ("ThreesAI", screenWidth * Display.scale, screenHeight * Display.scale)
-    let! tiles = Texture.create renderer "assets/tiles.png" Display.scale
-    let! background = Texture.create renderer "assets/background.png" Display.scale
+    let! window, renderer = Rendering.init ("ThreesAI", Display.screenWidth * Display.renderScale * 2, Display.screenHeight * Display.renderScale * 2)
+    let! tiles = Texture.create renderer "assets/tiles.png" (Display.renderScale * 2)
+    let! background = Texture.create renderer "assets/background.png" (Display.renderScale * 2)
+    let! nextTiles = Texture.create renderer "assets/next_tiles.png" Display.renderScale
+    let! numbers = Texture.create renderer "assets/numbers.png" Display.renderScale
+    let! scoreLabel = Texture.create renderer "assets/score.png" Display.renderScale
+    
+    do! Rendering.setDrawColor renderer (0xFFuy, 0xFFuy, 0xFFuy, 0xFFuy)
     
     return { Window = window
              Renderer = renderer
              Textures =
-                 { Tiles = tiles
-                   Background = background } }
+                 { Tiles      = tiles
+                   Background = background
+                   NextTiles  = nextTiles
+                   Numbers    = numbers
+                   ScoreLabel = scoreLabel } }
 }
 
 [<EntryPoint>]
