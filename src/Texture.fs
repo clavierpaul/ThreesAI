@@ -1,4 +1,7 @@
 ﻿namespace ThreesAI
+
+open ThreesAI
+
 #nowarn "9"
 
 open System
@@ -14,11 +17,11 @@ type Texture =
       Height: int
       Scale: int }
 
-type ClipRectangle =
-    { X: int
-      Y: int
-      W: int
-      H: int }
+type RenderOptions =
+    { Renderer: Renderer
+      Texture: Texture
+      Source: SDL_Rect option
+      Dest: SDL_Rect }
 
 module Texture =
     let private loadImage path =
@@ -52,15 +55,36 @@ module Texture =
         
         return { Handle = texture; Width = w; Height = h; Scale = scale }
     }
+    
+    let renderer texture renderer =
+        let w = texture.Width  * texture.Scale * renderScale
+        let h = texture.Height * texture.Scale * renderScale
+        { Texture = texture
+          Renderer = renderer
+          Source = None
+          Dest = SDL_Rect ( x = 0, y = 0, w = w, h = h ) }
+    
+    let renderAt (x, y) options =
+        { options with Dest = SDL_Rect ( x = x * renderScale * options.Texture.Scale,
+                                         y = y * renderScale * options.Texture.Scale,
+                                         w = options.Dest.w,
+                                         h = options.Dest.h ) }
 
-    let render texture (renderer: Renderer) ((x, y): Coords) (clipRectangle: ClipRectangle option) =
-        match clipRectangle with
+    let clip (clipRectangle: SDL_Rect) options =
+        let w = clipRectangle.w * options.Texture.Scale * renderScale
+        let h = clipRectangle.h * options.Texture.Scale * renderScale
+        let xDest = options.Dest.x
+        let yDest = options.Dest.y
+        { options with
+            Source = Some clipRectangle
+            Dest = SDL_Rect ( x = xDest, y = yDest, w = w, h = h ) }
+    
+    let render options =
+        let mutable dest = options.Dest
+        match options.Source with
         | None ->
-            let mutable destRect = SDL_Rect ( x = x, y = y, w = texture.Width * texture.Scale, h = texture.Height * texture.Scale)
-            
-            // What is error handling :S
-            SDL_RenderCopy (renderer, texture.Handle, IntPtr.Zero, &destRect) |> ignore
+            // Error handling is for nerds
+            SDL_RenderCopy (options.Renderer, options.Texture.Handle, IntPtr.Zero, &dest) |> ignore
         | Some rect ->
-            let mutable sdlRect  = SDL_Rect ( x = rect.X, y = rect.Y, w = rect.W, h = rect.H )
-            let mutable destRect = SDL_Rect ( x = x, y = y, w = rect.W * texture.Scale, h = rect.H * texture.Scale)
-            SDL_RenderCopy (renderer, texture.Handle, &sdlRect, &destRect) |> ignore
+            let mutable src = rect
+            SDL_RenderCopy (options.Renderer, options.Texture.Handle, &src, &dest) |> ignore

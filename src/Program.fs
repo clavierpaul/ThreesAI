@@ -1,7 +1,6 @@
 open ThreesAI
 open type SDL2.SDL
 
-    
 type SDLData =
     { Window: Rendering.Window
       Renderer: Rendering.Renderer
@@ -63,12 +62,12 @@ let rec gameLoop sdlData state =
     
 let init () = ResultBuilder.resultBuilder {
     // If there are any errors, init will end early and return Error
-    let! window, renderer = Rendering.init ("ThreesAI", Display.screenWidth * Display.renderScale * 2, Display.screenHeight * Display.renderScale * 2)
-    let! tiles = Texture.create renderer "assets/tiles.png" (Display.renderScale * 2)
-    let! background = Texture.create renderer "assets/background.png" (Display.renderScale * 2)
-    let! nextTiles = Texture.create renderer "assets/next_tiles.png" Display.renderScale
-    let! numbers = Texture.create renderer "assets/numbers.png" Display.renderScale
-    let! scoreLabel = Texture.create renderer "assets/score.png" Display.renderScale
+    let! window, renderer = Rendering.init ("ThreesAI", screenWidth, screenHeight)
+    let! tiles      = Texture.create renderer "assets/tiles.png" 2
+    let! background = Texture.create renderer "assets/background.png" 2
+    let! nextTiles  = Texture.create renderer "assets/next_tiles.png" 1
+    let! numbers    = Texture.create renderer "assets/numbers.png" 1
+    let! scoreLabel = Texture.create renderer "assets/score.png" 1
     
     do! Rendering.setDrawColor renderer (0xFAuy, 0xFAuy, 0xFAuy, 0xFFuy)
     
@@ -89,6 +88,9 @@ let main _ =
         gameLoop sdlData <| Game.create ()
         SDL_DestroyTexture  sdlData.Textures.Tiles.Handle
         SDL_DestroyTexture  sdlData.Textures.Background.Handle
+        SDL_DestroyTexture  sdlData.Textures.NextTiles.Handle
+        SDL_DestroyTexture  sdlData.Textures.ScoreLabel.Handle
+        SDL_DestroyTexture  sdlData.Textures.Numbers.Handle
         SDL_DestroyRenderer sdlData.Renderer
         SDL_DestroyWindow   sdlData.Window
         SDL_Quit ()
