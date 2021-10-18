@@ -7,34 +7,14 @@ open Controls
 // but this will do for now
 type State = {
     Board: Board
+    NextTile: Tile
     Deck: Deck
     BonusDeck: Deck
+    Score: int
     GameOver: bool
 }
 
 let random = Random ()
-
-let create () =
-    let deck = Deck.create ()
-    let board = Board.empty ()
-    
-    // I could do any number of unoptimized non-mutable methods
-    // but this works a lot better
-    let rec placementLoop tilesPlaced (deck: Deck) =
-        if tilesPlaced = 9 then
-            deck
-        else
-            
-        let rx, ry = (random.Next (0, 4), random.Next (0, 4))
-        if board.[rx, ry] = Empty then
-            let next = List.head deck
-            board.[rx, ry] <- next
-            placementLoop (tilesPlaced + 1) (List.tail deck)
-        else
-            placementLoop tilesPlaced deck
-    
-    let newDeck = placementLoop 0 deck
-    { Board = board; Deck = newDeck; BonusDeck = []; GameOver = false }
     
 let getPlacementSpots direction state =
     let edge =
@@ -48,17 +28,20 @@ let getPlacementSpots direction state =
     
 let setBonusDeck state =
     let bestTile = Board.max state.Board |> Board.getTileValue
-    if bestTile > 48 && bestTile / 8 <> (List.head state.BonusDeck |> Board.getTileValue) then
-        { state with BonusDeck = Tile (bestTile / 8) :: state.BonusDeck }
+    if bestTile >= 48 then
+        if List.length state.BonusDeck = 0 || bestTile / 8 <> (List.head state.BonusDeck |> Board.getTileValue) then
+            { state with BonusDeck = Tile (bestTile / 8) :: state.BonusDeck }
+        else
+            state
     else
         state
     
 let getNextTile state =
     if List.length state.BonusDeck > 0 && random.Next(0, 21) = 0 then
-        state.BonusDeck.[random.Next (0, (List.length state.BonusDeck) - 1)], state
+        { state with NextTile = state.BonusDeck.[random.Next (0, (List.length state.BonusDeck) - 1)] }
     else
         let deck = if List.length state.Deck > 0 then state.Deck else Deck.create ()
-        List.head deck, { state with Deck = List.tail deck }
+        { state with NextTile = List.head deck; Deck = List.tail deck }
     
 let placeTile direction state =
     let spots = getPlacementSpots direction state
@@ -66,9 +49,9 @@ let placeTile direction state =
     
     // Lazy, but Array2D is mutable so shrug
     let newBoard = Array2D.copy state.Board
-    let nextTile, state = getNextTile state
-    newBoard.[x, y] <- nextTile
-    { state with Board = newBoard; }
+    newBoard.[x, y] <- state.NextTile
+    
+    { getNextTile state with Board = newBoard; }
 
 let didShiftOccur before after =
     let beforeFlat = Seq.cast<Tile> before
@@ -98,10 +81,48 @@ let detectGameOver state =
     else
         { state with GameOver = true }
 
+let calculateScore state =
+    let scoreTile totalScore tile =
+        match tile with
+        | Empty  -> totalScore
+        | Tile 1 -> totalScore
+        | Tile 2 -> totalScore
+        | Tile t -> totalScore + (int <| 3.0 ** (Math.Log2(float t / 3.0) + 1.0))
+    
+    { state with Score = Seq.cast<Tile> state.Board |> Seq.fold scoreTile 0 }
+    
 let shift direction state =
     let shifted = { state with Board = state.Board |> Board.shift direction }
     if didShiftOccur state.Board shifted.Board then
-        let placement = placeTile direction shifted
-        detectGameOver placement
+        setBonusDeck shifted
+        |> placeTile direction
+        |> calculateScore
+        |> detectGameOver
     else
         state
+
+let create () =
+    let deck = Deck.create ()
+    let board = Board.empty ()
+    
+    // I could do any number of unoptimized non-mutable methods
+    // but this works a lot better
+    let rec placementLoop tilesPlaced (deck: Deck) =
+        if tilesPlaced = 9 then
+            deck
+        else
+            
+        let rx, ry = (random.Next (0, 4), random.Next (0, 4))
+        if board.[rx, ry] = Empty then
+            let next = List.head deck
+            board.[rx, ry] <- next
+            placementLoop (tilesPlaced + 1) (List.tail deck)
+        else
+            placementLoop tilesPlaced deck
+    
+    let newDeck = placementLoop 0 deck
+    { Board = board
+      NextTile = List.head newDeck
+      Deck = List.tail newDeck
+      BonusDeck = []; Score = 0
+      GameOver = false } |> calculateScore
