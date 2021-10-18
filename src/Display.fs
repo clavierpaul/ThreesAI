@@ -111,4 +111,3 @@ module Display =
             |> renderScoreLabel textures.ScoreLabel
             |> renderScore textures.Numbers state
             |> ignore
-        ()
