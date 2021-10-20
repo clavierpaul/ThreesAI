@@ -21,7 +21,11 @@
         <Compile Include="src\Rendering.fs" />
         <Compile Include="src\Texture.fs" />
         <Compile Include="src\Display.fs" />
-        <Compile Include="src\GameProcessor.fs" />
+        <Compile Include="src\Execution\GameProcessor.fs" />
+        <Compile Include="src\Execution\ZeroMQGameProcessor.fs" />
+        <Compile Include="src\Execution\CommonSDL.fs" />
+        <Compile Include="src\Execution\User.fs" />
+        <Compile Include="src\Execution\ZeroMQ.fs" />
         <Compile Include="src\Program.fs" />
     </ItemGroup>
     
@@ -30,6 +34,11 @@
         <Content Include="assets\*.png">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>
+    </ItemGroup>
+    
+    <ItemGroup>
+      <PackageReference Include="FSharp.Json" Version="0.4.1" />
+      <PackageReference Include="FsNetMQ" Version="0.5.0-pre" />
     </ItemGroup>
 
 </Project>
