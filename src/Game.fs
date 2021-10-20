@@ -3,8 +3,8 @@
 open System
 open Controls
 
-// This would be cleaner with monads
-// but this will do for now
+let private random = Random ()
+    
 type State = {
     Board: Board
     NextTile: Tile
@@ -13,10 +13,8 @@ type State = {
     Score: int
     GameOver: bool
 }
-
-let random = Random ()
     
-let getPlacementSpots direction state =
+let private getPlacementSpots direction state =
     let edge =
        match direction with
        | Up    -> [for x in [0..3] do (x, 3), state.Board.[x, 3]]
@@ -26,7 +24,7 @@ let getPlacementSpots direction state =
     
     edge |> List.filter (fun (_, space) -> space = Empty)
     
-let setBonusDeck state =
+let private setBonusDeck state =
     let bestTile = Board.max state.Board |> Board.getTileValue
     if bestTile >= 48 then
         if List.length state.BonusDeck = 0 || bestTile / 8 <> (List.head state.BonusDeck |> Board.getTileValue) then
@@ -36,14 +34,14 @@ let setBonusDeck state =
     else
         state
     
-let getNextTile state =
+let private getNextTile state =
     if List.length state.BonusDeck > 0 && random.Next(0, 21) = 0 then
         { state with NextTile = state.BonusDeck.[random.Next (0, (List.length state.BonusDeck) - 1)] }
     else
         let deck = if List.length state.Deck > 0 then state.Deck else Deck.create ()
         { state with NextTile = List.head deck; Deck = List.tail deck }
     
-let placeTile direction state =
+let private placeTile direction state =
     let spots = getPlacementSpots direction state
     let x, y = fst <| spots.[random.Next(0, (List.length spots) - 1)]
     
@@ -53,13 +51,13 @@ let placeTile direction state =
     
     { getNextTile state with Board = newBoard; }
 
-let didShiftOccur before after =
+let private didShiftOccur before after =
     let beforeFlat = Seq.cast<Tile> before
     let afterFlat = Seq.cast<Tile> after
     
     Seq.contains false <| Seq.map2 (fun a b -> a = b) beforeFlat afterFlat
 
-let canTileMerge (board: Board) x y tile =
+let private canTileMerge (board: Board) x y tile =
     let unwrap result =
         match result with
         | None   -> failwith "Attempted to unwrap a None"
@@ -74,7 +72,7 @@ let canTileMerge (board: Board) x y tile =
     let mergeResults = adjacent |> List.map (Board.canMerge tile)
     List.contains true mergeResults
 
-let detectGameOver state =
+let private detectGameOver state =
     let canTilesMerge = state.Board |> Array2D.mapi (canTileMerge state.Board) |> Seq.cast<bool> |> Seq.contains true
     if canTilesMerge then
         state

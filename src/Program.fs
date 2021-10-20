@@ -1,20 +1,11 @@
 open ThreesAI
+open Display
 open type SDL2.SDL
-
-type SDLData =
-    { Window: Rendering.Window
-      Renderer: Rendering.Renderer
-      Textures: Display.Textures }
 
 // Dumb type name is dumb
 type EventReturn =
     | Quit
     | State of Game.State
-
-let render sdlData board =
-    SDL_RenderClear sdlData.Renderer |> ignore
-    Display.render sdlData.Renderer sdlData.Textures board
-    SDL_RenderPresent sdlData.Renderer
 
 let pollEvents ()  =
     let rec pollLoop events =
@@ -27,38 +18,30 @@ let pollEvents ()  =
             events
     pollLoop []
 
-// Avoids having to wrap every return in State
-let updateState state (event: SDL_Event) =
+let updateGameState (stateProcessor: MailboxProcessor<Message>) (event: SDL_Event) =
     match event.``type`` with
     | SDL_EventType.SDL_KEYDOWN ->
         match event.key.keysym.sym with
-        | SDL_Keycode.SDLK_LEFT  -> state |> Game.shift Controls.Left
-        | SDL_Keycode.SDLK_RIGHT -> state |> Game.shift Controls.Right
-        | SDL_Keycode.SDLK_UP    -> state |> Game.shift Controls.Up
-        | SDL_Keycode.SDLK_DOWN  -> state |> Game.shift Controls.Down
-        | SDL_Keycode.SDLK_r     -> Game.create ()
-        | _ -> state
-    | _ -> state
+        | SDL_Keycode.SDLK_LEFT  -> stateProcessor.Post(ShiftLeft)
+        | SDL_Keycode.SDLK_RIGHT -> stateProcessor.Post(ShiftRight)
+        | SDL_Keycode.SDLK_UP    -> stateProcessor.Post(ShiftUp)
+        | SDL_Keycode.SDLK_DOWN  -> stateProcessor.Post(ShiftDown)
+        | SDL_Keycode.SDLK_r     -> stateProcessor.Post(Restart)
+        | _ -> ()
+    | _ -> ()
     
-let update state (event: SDL_Event) =
-    match state with
-    | Quit -> state // If we're quitting, there's no more state to handle
-    | State state ->
-        match event.``type`` with
-        | SDL_EventType.SDL_QUIT -> Quit
-        | _                      -> State <| updateState state event
-    
-let rec gameLoop sdlData state =
+let rec gameLoop (stateProcessor: MailboxProcessor<Message>) =
     // Fold events together into a final state (or quit)
-    match List.fold update (State state) <| pollEvents () with
-    | Quit           -> ()
-    | State newState ->
-        if newState.GameOver then
-            printfn "Game over!"
-            ()
-        else 
-            render sdlData newState
-            gameLoop sdlData newState
+    let events = pollEvents ()
+    
+    let matchQuit (event: SDL_Event) = event.``type`` = SDL_EventType.SDL_QUIT
+    
+    if List.exists matchQuit events then
+        stateProcessor.Post(Exit)
+        ()
+    else
+        events |> List.iter (updateGameState stateProcessor)
+        gameLoop stateProcessor
     
 let init () = ResultBuilder.resultBuilder {
     // If there are any errors, init will end early and return Error
@@ -85,7 +68,11 @@ let init () = ResultBuilder.resultBuilder {
 let main _ =
     match init () with
     | Ok sdlData ->
-        gameLoop sdlData <| Game.create ()
+        let stateProcessor = GameProcessor.stateProcessor sdlData
+        let inbox = stateProcessor.Start ()
+        gameLoop inbox
+        // There needs to be a system to signal when the renderer is done to avoid crash on exit,
+        // however I don't have time anymore :/
         SDL_DestroyTexture  sdlData.Textures.Tiles.Handle
         SDL_DestroyTexture  sdlData.Textures.Background.Handle
         SDL_DestroyTexture  sdlData.Textures.NextTiles.Handle
@@ -97,4 +84,5 @@ let main _ =
     | Error e -> printfn $"SDL Error: {e}"
     |> ignore 
     0
+    
     
