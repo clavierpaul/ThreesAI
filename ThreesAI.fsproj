@@ -16,10 +16,12 @@
         <Compile Include="src\Controls.fs" />
         <Compile Include="src\Board.fs" />
         <Compile Include="src\Deck.fs" />
+        <Compile Include="src\Message.fs" />
         <Compile Include="src\Game.fs" />
         <Compile Include="src\Rendering.fs" />
         <Compile Include="src\Texture.fs" />
         <Compile Include="src\Display.fs" />
+        <Compile Include="src\GameProcessor.fs" />
         <Compile Include="src\Program.fs" />
     </ItemGroup>
     
