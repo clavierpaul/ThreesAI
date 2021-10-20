@@ -1,6 +1,7 @@
-﻿module ThreesAI.GameProcessor
+﻿module ThreesAI.Execution.GameProcessor
 
 open type SDL2.SDL
+open ThreesAI
 open Controls
     
 let newStateFromMessage message state =
@@ -14,12 +15,11 @@ let newStateFromMessage message state =
     
 // If I had more time for this project I would find a more functional way to do this,
 // but I'm going to do it this way for now
-type stateProcessor(sdlData: Display.SDLData) =
-    let sdlData = sdlData
+type stateProcessor() =
     let mutable state = Game.create ()
     let mutable exit = false
     
-    member this.AsyncRenderLoop = async {
+    member this.AsyncRenderLoop (sdlData: Display.SDLData) = async {
         let rec renderLoop () =
             if not exit then 
                 SDL_RenderClear sdlData.Renderer |> ignore
@@ -32,11 +32,10 @@ type stateProcessor(sdlData: Display.SDLData) =
         renderLoop ()
     }
     
-    member private this.StartRender () =
-        Async.Start(this.AsyncRenderLoop)
+    member this.StartRender (sdlData: Display.SDLData) =
+        Async.Start(this.AsyncRenderLoop sdlData)
     
     member this.Start () =
-        this.StartRender ()
         MailboxProcessor<Message>.Start(fun inbox ->
             let rec updateLoop () = async {
                 // Wait for update message
