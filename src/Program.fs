@@ -9,6 +9,12 @@ let main args =
     else
         match args.[0] with
         | "--ai" -> ZeroMQ.run ()
+        | "--ai-headless" ->
+            let gameProcessor = ZeroMQGameProcessor.zeroMQStateProcessor ()
+            gameProcessor.Start ()
+            let rec loop () =
+                loop ()
+            loop ()
         | arg    -> printfn $"Unrecognised argument \"{arg}\""
         0
     

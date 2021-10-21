@@ -9,21 +9,11 @@ open System.Text
     
 type GameData = {
     Board: int list
+    ValidMoves: byte list
     Next: int
     Score: int
     GameOver: bool
 }
-
-let stateToGameData (state: Game.State) =
-    let board = state.Board
-                    |> Seq.cast<Tile>
-                    |> Seq.map Board.getTileValue
-                    |> List.ofSeq
-    
-    { Board    = board
-      Next     = Board.getTileValue state.NextTile
-      Score    = state.Score
-      GameOver = state.GameOver }
     
 let newStateFromMessage message state =
     match message with
@@ -32,7 +22,36 @@ let newStateFromMessage message state =
     | 3uy -> state |> Game.shift Left
     | 4uy -> state |> Game.shift Right
     | 5uy -> Game.create ()
-    | _   -> state
+    | m   -> failwith $"Attempted an invalid move {m}"
+
+let testShift direction before board =
+    board
+        |> Board.shift direction
+        |> Game.didShiftOccur before
+
+let testDirection board direction  =
+    match direction with
+    | 1uy -> board |> testShift ShiftDirection.Up board
+    | 2uy -> board |> testShift ShiftDirection.Down board
+    | 3uy -> board |> testShift ShiftDirection.Left board
+    | 4uy -> board |> testShift ShiftDirection.Right board
+    | m   -> failwith $"Attempted an invalid move {m}"
+    
+let findValidMoves (board: Board) =
+    [ 1uy; 2uy; 3uy; 4uy ]
+        |> List.filter (testDirection board)
+        
+let stateToGameData (state: Game.State) =
+    let board = state.Board
+                    |> Seq.cast<Tile>
+                    |> Seq.map Board.getTileValue
+                    |> List.ofSeq
+    
+    { Board      = board
+      ValidMoves = findValidMoves state.Board
+      Next       = Board.getTileValue state.NextTile
+      Score      = state.Score
+      GameOver   = state.GameOver }
     
 // If I had more time for this project I would find a more functional way to do this,
 // but I'm going to do it this way for now
@@ -61,6 +80,7 @@ type zeroMQStateProcessor() =
         Socket.bind rep "tcp://*:5555"
         
         let rec updateLoop () = async {
+            printfn "Waiting for input..."
             let message, _ = Frame.recv rep
             printfn $"Received {message.[0]}"
             
