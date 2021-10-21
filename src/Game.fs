@@ -51,18 +51,13 @@ let private placeTile direction state =
     
     { getNextTile state with Board = newBoard; }
 
-let private didShiftOccur before after =
+let didShiftOccur before after =
     let beforeFlat = Seq.cast<Tile> before
     let afterFlat = Seq.cast<Tile> after
     
     Seq.contains false <| Seq.map2 (fun a b -> a = b) beforeFlat afterFlat
 
 let private canTileMerge (board: Board) x y tile =
-    let unwrap result =
-        match result with
-        | None   -> failwith "Attempted to unwrap a None"
-        | Some n -> n
-        
     let adjacent =
         [ Board.tryGet (x - 1, y) board
           Board.tryGet (x + 1, y) board
