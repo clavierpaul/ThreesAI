@@ -58,7 +58,7 @@ type zeroMQStateProcessor() =
     
     member this.Start () =
         let rep = Socket.rep ()
-        Socket.bind rep "tcp://127.0.0.1:5555"
+        Socket.bind rep "tcp://*:5555"
         
         let rec updateLoop () = async {
             let message, _ = Frame.recv rep
