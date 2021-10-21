@@ -46,7 +46,7 @@ let stateToGameData (state: Game.State) =
                     |> Seq.cast<Tile>
                     |> Seq.map Board.getTileValue
                     |> List.ofSeq
-    
+
     { Board      = board
       ValidMoves = findValidMoves state.Board
       Next       = Board.getTileValue state.NextTile
