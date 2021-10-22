@@ -13,9 +13,10 @@ class GameConnector:
 
     def shift(self, direction: int) -> Dict:
         self.socket.send(direction.to_bytes(1, byteorder='little'))
-
+        print(threading.get_ident())
         return self.socket.recv_json()
 
     def restart(self) -> Dict:
         self.socket.send(b'\x05')
+        print(threading.current_thread().name)
         return self.socket.recv_json()
