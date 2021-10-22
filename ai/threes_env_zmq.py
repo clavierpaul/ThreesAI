@@ -1,31 +1,26 @@
-from tensorflow.python.util.tf_decorator import rewrap
 from tf_agents.environments import py_environment
 from tf_agents.specs import array_spec
 from tf_agents.trajectories import time_step as ts
-from board import Direction
-from game import Threes
+from communication import GameConnector
 import numpy as np
 from typing import Dict, List, Union, cast
 
 
 class ThreesEnv(py_environment.PyEnvironment):
-    game: Threes
-    last_board: np.ndarray
-    moves = [Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT]
+    connector: GameConnector
+    last_state: Dict
 
     def __init__(self):
-        self.game = Threes()
-
+        self.connector = GameConnector("127.0.0.1", 5555)
         self._action_spec = array_spec.BoundedArraySpec(
             shape=(), dtype=np.int32, minimum=0, maximum=3, name='action')
 
         self._observation_spec = array_spec.BoundedArraySpec(
             shape=(17,), dtype=np.int32, minimum=0, maximum=6144, name='observation')
 
-    def __get_observation(self):
-        board = self.game.board.flatten()
-
-        board = np.append(board, self.game.next_tile)
+    def __state_to_observation(self, state: Dict):
+        board = state['Board']
+        board.append(state['Next'])
         return np.array(board, dtype=np.int32)
 
     def __try_get(self, board, x: int, y: int) -> Union[int, None]:
@@ -54,8 +49,9 @@ class ThreesEnv(py_environment.PyEnvironment):
         return (dest == None) or (dest >= 3 and src < dest)
 
     # Reward algorithm from Threesus
-    def __score_board(self):
-        board = self.game.board
+    def __score_board(self, state: Dict):
+        board = np.array(state['Board'][0:16])
+        board = np.reshape(board, (4, 4))
 
         score = 0
 
@@ -99,19 +95,21 @@ class ThreesEnv(py_environment.PyEnvironment):
         return self._observation_spec
 
     def _reset(self):
-        self.game.reset()
-        return ts.restart(self.__get_observation())
+        self.last_state = self.connector.restart()
+        return ts.restart(self.__state_to_observation(self.last_state))
 
     def _step(self, action):
-        action = action.item(0)
-        self.last_board = self.game.board.copy()
-        self.game.shift(self.moves[action])
+        action = action.item(0) + 1
+        # No reward for invalid moves
+        if (action not in self.last_state['ValidMoves']):
+            state = self.connector.shift(action)
+            self.last_state = state
+            return ts.transition(self.__state_to_observation(self.last_state), reward=0, discount=1.0)
 
-        # No reward for a move that does nothing
-        if np.array_equal(self.last_board, self.game.board):
-            return ts.transition(self.__get_observation(), reward=0, discount=1.0)
-        
-        if self.game.game_over:
-            return ts.termination(self.__get_observation(), reward=self.game.score)
+        state = self.connector.shift(action)
+        self.last_state = state
+
+        if state['GameOver']:
+            return ts.termination(self.__state_to_observation(state), reward=state['Score'])
         else:
-            return ts.transition(self.__get_observation(), reward=self.__score_board(), discount=1.0)
+            return ts.transition(self.__state_to_observation(state), reward=self.__score_board(state), discount=1.0)

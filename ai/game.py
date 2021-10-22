@@ -8,7 +8,7 @@ from random import shuffle, randrange, choice
 
 import board
 
-class Game():
+class Threes():
     board: np.ndarray
     next_tile: int
     deck: List[int]
