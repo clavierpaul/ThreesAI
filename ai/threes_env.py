@@ -1,10 +1,14 @@
+from numpy.core.defchararray import array
 from tensorflow.python.util.tf_decorator import rewrap
 from tf_agents.environments import py_environment
 from tf_agents.specs import array_spec
+import tensorflow as tf
+from tensorflow import convert_to_tensor
 from tf_agents.trajectories import time_step as ts
 from board import Direction
 from game import Threes
 import numpy as np
+import board
 from typing import Dict, List, Union, cast
 
 
@@ -12,21 +16,24 @@ class ThreesEnv(py_environment.PyEnvironment):
     game: Threes
     last_board: np.ndarray
     moves = [Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT]
+    invalid_moves = 0
 
     def __init__(self):
         self.game = Threes()
+        self.reset()
 
         self._action_spec = array_spec.BoundedArraySpec(
             shape=(), dtype=np.int32, minimum=0, maximum=3, name='action')
 
-        self._observation_spec = array_spec.BoundedArraySpec(
-            shape=(17,), dtype=np.int32, minimum=0, maximum=6144, name='observation')
+        self._observation_spec = {'observation':  array_spec.BoundedArraySpec(
+            shape=(17,), dtype=np.int32, minimum=0, maximum=6144, name='observation'),
+            'actions': array_spec.ArraySpec(shape=(4,), dtype=np.int32)}
 
     def __get_observation(self):
         board = self.game.board.flatten()
 
         board = np.append(board, self.game.next_tile)
-        return np.array(board, dtype=np.int32)
+        return {'observation': np.array(board, dtype=np.int32), 'actions': self.__get_valid_moves_mask() }
 
     def __try_get(self, board, x: int, y: int) -> Union[int, None]:
         if 0 <= x < 4 and 0 <= y < 4:
@@ -92,6 +99,17 @@ class ThreesEnv(py_environment.PyEnvironment):
 
         return score
 
+    def __get_valid_moves_mask(self):
+        move_mask = [0, 0, 0, 0]
+        for i in range(4):
+            move = self.moves[i]
+
+            result = board.shift(move, self.game.board.copy())
+            if self.game.didShiftOccur(self.game.board, result):
+                move_mask[i] = 1
+        
+        return np.array(move_mask, dtype=np.int32)
+
     def action_spec(self):
         return self._action_spec
 
@@ -99,19 +117,20 @@ class ThreesEnv(py_environment.PyEnvironment):
         return self._observation_spec
 
     def _reset(self):
+        self.game = Threes()
         self.game.reset()
+        self.invalid_moves = 0
         return ts.restart(self.__get_observation())
+
 
     def _step(self, action):
         action = action.item(0)
         self.last_board = self.game.board.copy()
         self.game.shift(self.moves[action])
-
-        # No reward for a move that does nothing
-        if np.array_equal(self.last_board, self.game.board):
-            return ts.transition(self.__get_observation(), reward=0, discount=1.0)
         
         if self.game.game_over:
-            return ts.termination(self.__get_observation(), reward=self.game.score)
+            termination = ts.termination(self.__get_observation(), reward=self.game.score)
+            self.reset()
+            return termination
         else:
             return ts.transition(self.__get_observation(), reward=self.__score_board(), discount=1.0)
