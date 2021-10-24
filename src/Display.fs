@@ -10,11 +10,6 @@ module Display =
           NextTiles: Texture
           Numbers: Texture
           ScoreLabel: Texture }
-        
-    type SDLData =
-        { Window: Rendering.Window
-          Renderer: Rendering.Renderer
-          Textures: Textures }
     
     let tileAtlas = Map.empty
                         .Add(1,    (0, 0))
