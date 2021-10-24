@@ -3,7 +3,7 @@ namespace ThreesAI
 [<AutoOpen>]
 module Prelude =
     [<Literal>]
-    let renderScale = 2
+    let renderScale = 1
 
     [<Literal>]
     let screenWidth = 312
